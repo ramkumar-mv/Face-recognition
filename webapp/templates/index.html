@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Recognition Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #385d55;
+            --accent-color: #f5a623;
+            --background-color: #f0f4f8;
+            --text-color: #000000;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .sidebar {
+            height: 100vh;
+            width: 250px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background-color: var(--primary-color);
+            padding-top: 20px;
+        }
+
+        .sidebar .nav-link {
+            color: white !important;
+            padding: 10px 15px;
+            transition: background-color 0.3s ease;
+        }
+
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar .nav-link i {
+            margin-right: 10px;
+        }
+
+        .content {
+            margin-left: 250px;
+            padding: 20px;
+        }
+
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .btn-success {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+
+        .btn-danger {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+
+        .camera-feed img {
+            width: 100%;
+            max-width: 640px;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .scroll-container {
+            max-height: calc(100vh - 200px);
+            overflow-y: auto;
+        }
+
+        .animate__animated {
+            animation-duration: 0.5s;
+        }
+
+        #profile-dropdown {
+            position: absolute;
+            top: 60px;
+            right: 20px;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            display: none;
+        }
+
+        #profile-dropdown a {
+            display: block;
+            padding: 10px;
+            text-decoration: none;
+            color: var(--text-color);
+        }
+
+        #profile-dropdown a:hover {
+            background-color: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h3 class="text-white text-center mb-4">Face Recognition Dashboard</h3>
+        <ul class="nav flex-column" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <a class="nav-link active" id="home-tab" data-bs-toggle="tab" href="#home" role="tab">
+                    <i class="fas fa-home"></i> Home
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" id="detected-faces-tab" data-bs-toggle="tab" href="#detected-faces" role="tab">
+                    <i class="fas fa-user-check"></i> Detected Faces
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" id="control-panel-tab" data-bs-toggle="tab" href="#control-panel" role="tab">
+                    <i class="fas fa-cogs"></i> Control Panel
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" id="alarm-system-tab" data-bs-toggle="tab" href="#alarm-system" role="tab">
+                    <i class="fas fa-bell"></i> Alarm System
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="content">
+        <div class="d-flex justify-content-end mb-4">
+            <div class="dropdown">
+                <button class="btn btn-secondary dropdown-toggle" type="button" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-user-circle"></i> My Profile
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="profileDropdown">
+                    <li><a class="dropdown-item" href="#"><i class="fas fa-id-card"></i> Profile</a></li>
+                    <li><a class="dropdown-item" href="login.html"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="tab-content" id="myTabContent">
+            <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
+                <h2 class="animate__animated animate__fadeIn">Camera Feeds</h2>
+                <div id="camera-feeds" class="row">
+                    {% for camera in cameras %}
+                    <div class="col-md-6 mb-3 animate__animated animate__zoomIn">
+                        <h5>Camera {{ loop.index }}</h5>
+                        <div class="camera-feed">
+                            <img src="{{ url_for('video_feed', camera_id=camera) }}" class="img-fluid" alt="Camera Feed">
+                        </div>
+                    </div>
+                    {% else %}
+                    <p class="animate__animated animate__fadeIn">No cameras registered yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="detected-faces" role="tabpanel" aria-labelledby="detected-faces-tab">
+                <h2 class="animate__animated animate__fadeIn">Detected Faces</h2>
+                <button id="export-excel" class="btn btn-success mb-3 animate__animated animate__fadeIn">Export to Excel</button>
+                <div class="scroll-container">
+                    <table class="table table-striped animate__animated animate__fadeIn">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Confidence</th>
+                                <th>Camera</th>
+                                <th>Time</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detected-faces-list">
+                            <!-- Detected faces will be dynamically added here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="control-panel" role="tabpanel" aria-labelledby="control-panel-tab">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card mb-3 animate__animated animate__fadeInLeft">
+                            <div class="card-body">
+                                <h5 class="card-title">Add New Camera</h5>
+                                <form action="{{ url_for('add_camera') }}" method="post">
+                                    <div class="mb-3">
+                                        <label for="camera_id" class="form-label">Camera ID (RTSP Link):</label>
+                                        <input type="text" class="form-control" id="camera_id" name="camera_id" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Add Camera</button>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="card mb-3 animate__animated animate__fadeInLeft">
+                            <div class="card-body">
+                                <h5 class="card-title">Remove Camera</h5>
+                                <form action="{{ url_for('remove_camera') }}" method="post">
+                                    <div class="mb-3">
+                                        <label for="remove_camera_id" class="form-label">Select Camera:</label>
+                                        <select class="form-control" id="remove_camera_id" name="camera_id" required>
+                                            {% for camera in cameras %}
+                                            <option value="{{ camera }}">Camera {{ loop.index }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="btn btn-danger">Remove Camera</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card mb-3 animate__animated animate__fadeInRight">
+                            <div class="card-body">
+                                <h5 class="card-title">Add New Face</h5>
+                                <form id="register-face-form">
+                                    <div class="mb-3">
+                                        <label for="name" class="form-label">Enter Name:</label>
+                                        <input type="text" class="form-control" id="name" name="name" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="register_camera_id" class="form-label">Select Camera:</label>
+                                        <select class="form-control" id="register_camera_id" name="camera_id" required>
+                                            {% for camera in cameras %}
+                                            <option value="{{ camera }}">Camera {{ loop.index }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Start Registration</button>
+                                </form>
+                                <div id="registration-status" class="mt-2"></div>
+                                <div id="registration-timer" class="mt-2"></div>
+                            </div>
+                        </div>
+                        <div class="card mb-3 animate__animated animate__fadeInRight">
+                            <div class="card-body">
+                                <h5 class="card-title">Set Detection Interval</h5>
+                                <form id="detection-interval-form">
+                                    <div class="mb-3">
+                                        <label for="interval" class="form-label">Interval:</label>
+                                        <input type="number" class="form-control" id="interval" name="interval" required min="1">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="unit" class="form-label">Unit:</label>
+                                        <select class="form-control" id="unit" name="unit" required>
+                                            <option value="seconds">Seconds</option>
+                                            <option value="minutes">Minutes</option>
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Set Interval</button>
+                                </form>
+                                <div id="interval-status" class="mt-2"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card animate__animated animate__fadeInUp">
+                            <div class="card-body">
+                                <h5 class="card-title">Registered Names</h5>
+                                <ul id="registered-names" class="list-group">
+                                    {% for name in registered_names %}
+                                    <li class="list-group-item">{{ name }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="alarm-system" role="tabpanel" aria-labelledby="alarm-system-tab">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card mb-3 animate__animated animate__fadeInUp">
+                            <div class="card-body">
+                                <h5 class="card-title">Alarm System</h5>
+                                <form id="alarm-form">
+                                    <div class="mb-3">
+                                        <label for="alarm-target" class="form-label">Target:</label>
+                                        <select class="form-control" id="alarm-target" name="target" required>
+                                            <option value="Unknown">Unknown</option>
+                                            {% for name in registered_names %}
+                                            <option value="{{ name }}">{{ name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="alarm-email" class="form-label">Email:</label>
+                                        <input type="email" class="form-control" id="alarm-email" name="email" required>
+                                    </div>
+                                    <div class="mb-3 form-check">
+                                        <input type="checkbox" class="form-check-input" id="alarm-enabled" name="enabled">
+                                        <label class="form-check-label" for="alarm-enabled">Enable Alarm</label>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Set Alarm</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Handle face registration
+            $('#register-face-form').submit(function(e) {
+                e.preventDefault();
+                $.post("{{ url_for('register_face_route') }}", $(this).serialize(), function(data) {
+                    $('#registration-status').text(data.message);
+                    // Update registered names list
+                    $.get("{{ url_for('index') }}", function(data) {
+                        var names = $(data).find('#registered-names').html();
+                        $('#registered-names').html(names);
+                    });
+                });
+
+                // Start registration timer
+                var secondsLeft = 5;
+                var timerInterval = setInterval(function() {
+                    $('#registration-timer').text(secondsLeft + " seconds left");
+                    secondsLeft--;
+                    if (secondsLeft < 0) {
+                        clearInterval(timerInterval);
+                        $('#registration-timer').text("Registration complete");
+                    }
+                }, 1000);
+            });
+
+            // Handle detection interval setting
+            $('#detection-interval-form').submit(function(e) {
+                e.preventDefault();
+                $.post("{{ url_for('set_detection_interval') }}", $(this).serialize(), function(data) {
+                    $('#interval-status').text(data.message);
+                });
+            });
+
+            // Handle alarm system
+            $('#alarm-form').submit(function(e) {
+                e.preventDefault();
+                $.post("{{ url_for('set_alarm') }}", $(this).serialize(), function(data) {
+                    alert(data.message);
+                });
+            });
+
+            // Handle export to Excel
+            $('#export-excel').click(function() {
+                window.location.href = "{{ url_for('export_detected_faces') }}";
+            });
+
+            // Periodically update detected faces
+            function updateDetectedFaces() {
+                $.get("{{ url_for('get_detected_faces') }}", function(data) {
+                    var facesHtml = '';
+                    data.forEach(function(face) {
+                        facesHtml += `
+                            <tr>
+                                <td>${face.name}</td>
+                                <td>${face.confidence}%</td>
+                                <td>${face.camera}</td>
+                                <td>${face.time}</td>
+                            </tr>
+                        `;
+                    });
+                    $('#detected-faces-list').prepend(facesHtml);
+                });
+            }
+
+            setInterval(updateDetectedFaces, 5000); // Update every 5 seconds
+        });
+    </script>
+</body>
+</html>
